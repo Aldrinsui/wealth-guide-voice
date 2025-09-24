@@ -91,7 +91,7 @@ export const FinancialChatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const getPersonalizedResponse = (userMessage: string): string => {
+  const getBeginnerFriendlyResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
     const income = extractNumberFromText(userMessage);
     
@@ -113,130 +113,255 @@ export const FinancialChatbot = () => {
         userData: { ...prev.userData, age }
       }));
     }
-    
-    // Budget calculation and advice
-    if (message.includes('budget') || message.includes('spending')) {
+
+    // Simple greeting responses
+    if (message.includes('hello') || message.includes('hi') || message.includes('help')) {
+      return `Hi there! 👋 I'm here to help you take control of your money - don't worry, we'll keep it simple!
+
+Here's what I can help you with:
+💰 **Create a simple budget** (how to split your money)
+🏦 **Plan for retirement** (saving for when you're older)
+🚨 **Emergency savings** (money for unexpected things)
+📊 **Pay off debt** (get rid of what you owe)
+📈 **Start investing** (grow your money)
+
+What would you like to start with? Just pick one topic or tell me about your situation!`;
+    }
+
+    // Budget - Beginner friendly
+    if (message.includes('budget') || message.includes('spending') || message.includes('money')) {
       if (chatContext.userData.income) {
         const budget = calculateBudget(chatContext.userData.income);
-        return `Based on your ${formatCurrency(chatContext.userData.income)} income, here's your personalized 50/30/20 budget:
-        
-📊 **Monthly Budget Breakdown:**
-• **Needs (50%)**: ${formatCurrency(budget.needs)} - rent, utilities, groceries
-• **Wants (30%)**: ${formatCurrency(budget.wants)} - entertainment, dining out
-• **Savings (20%)**: ${formatCurrency(budget.savings)} - emergency fund, investments
+        return `Great! Let me create a simple budget for you. 📊
 
-This budget will help you maintain financial stability while building wealth. Would you like me to help you break down any of these categories further?`;
+**Your ${formatCurrency(chatContext.userData.income)} monthly income should be split like this:**
+
+🏠 **Needs (${formatCurrency(budget.needs)})** - The must-haves:
+• Rent/mortgage
+• Groceries & utilities  
+• Transportation
+• Minimum debt payments
+
+🎉 **Wants (${formatCurrency(budget.wants)})** - The fun stuff:
+• Dining out & entertainment
+• Hobbies & subscriptions
+• Shopping for non-essentials
+
+💰 **Savings (${formatCurrency(budget.savings)})** - Your future self:
+• Emergency fund (start here!)
+• Retirement savings
+• Goals like vacation or house
+
+**Getting Started:**
+1. Track your spending for a week
+2. Start with just the emergency fund
+3. Use apps like Mint or YNAB to help
+
+Would you like help with any specific part of this budget?`;
       } else {
         setChatContext(prev => ({ ...prev, lastTopic: 'budget' }));
-        return "I'd love to create a personalized budget for you! What's your monthly income? Just tell me something like 'I make $5000 per month' and I'll calculate your optimal budget breakdown.";
+        return `I'd love to help you create a simple budget! 💰
+
+First, I need to know your monthly income. This includes:
+• Your job salary (after taxes)
+• Any side income
+• Other regular money coming in
+
+Just tell me something like: "I make $3,000 per month" or "My income is $50,000 per year"
+
+Don't worry - I won't store this info anywhere, it's just for our conversation! 🔒`;
       }
     }
     
-    // Retirement planning
+    // Retirement - Simplified
     if (message.includes('retire') || message.includes('pension') || message.includes('401k')) {
       if (chatContext.userData.income && chatContext.userData.age) {
         const retirementPlan = calculateRetirementPlan(
           chatContext.userData.age,
-          65, // default retirement age
+          65,
           chatContext.userData.currentSavings || 0,
           chatContext.userData.income
         );
-        return `Based on your profile (age ${chatContext.userData.age}, income ${formatCurrency(chatContext.userData.income)}), here's your personalized retirement plan:
+        return `Let me show you a simple retirement plan! 🎯
 
-🎯 **Retirement Projection:**
-• **Years to retirement**: ${retirementPlan.yearsToRetirement} years
-• **Recommended monthly contribution**: ${formatCurrency(retirementPlan.monthlyContribution)}
-• **Projected retirement fund**: ${formatCurrency(retirementPlan.projectedRetirementFund)}
-• **Monthly income at retirement**: ${formatCurrency(retirementPlan.monthlyIncomeAtRetirement)}
+**Here's the good news:**
+• You have ${retirementPlan.yearsToRetirement} years to save
+• If you save ${formatCurrency(retirementPlan.monthlyContribution)} per month
+• You could have ${formatCurrency(retirementPlan.projectedRetirementFund)} when you retire!
+• That's about ${formatCurrency(retirementPlan.monthlyIncomeAtRetirement)} per month to live on
 
-This assumes a 7% annual return and 15% contribution rate. Want to adjust these parameters?`;
+**Start Simple:**
+1. **Get your employer match** - Free money if your job offers 401k matching
+2. **Open a Roth IRA** - Tax-free growth (max $6,500/year)
+3. **Invest in index funds** - Like buying a piece of the whole stock market
+
+**Don't worry about being perfect** - even $50/month is a great start! The important thing is to begin.
+
+Want me to explain any of these steps in more detail?`;
       } else {
         setChatContext(prev => ({ ...prev, lastTopic: 'retirement' }));
-        return "Let me create a personalized retirement plan! I'll need your age and monthly income. For example: 'I'm 30 years old and make $6000 per month.'";
+        return `Planning for retirement is smart! 🌟 Let me make this super simple.
+
+I need two quick things:
+1. **Your age** (like "I'm 25")
+2. **Your monthly income** (like "I make $4,000 per month")
+
+Then I can show you exactly how much to save and where to put it!
+
+The earlier you start, the easier it gets because of "compound interest" (basically your money makes money). 📈`;
       }
     }
     
-    // Emergency fund calculation
+    // Emergency fund - Very beginner friendly
     if (message.includes('emergency') || (message.includes('savings') && !message.includes('retirement'))) {
       if (chatContext.userData.income) {
-        const monthlyExpenses = chatContext.userData.expenses || chatContext.userData.income * 0.8; // Estimate 80% of income
+        const monthlyExpenses = chatContext.userData.expenses || chatContext.userData.income * 0.8;
         const emergencyPlan = calculateEmergencyFund(monthlyExpenses, chatContext.userData.currentSavings || 0, chatContext.userData.income);
-        return `Here's your personalized emergency fund plan:
+        return `Perfect! Let's build your "sleep better at night" fund! 😴
 
-💰 **Emergency Fund Strategy:**
-• **Target amount**: ${formatCurrency(emergencyPlan.targetAmount)} (6 months expenses)
-• **Current savings**: ${formatCurrency(emergencyPlan.currentAmount)}
-• **Monthly savings needed**: ${formatCurrency(emergencyPlan.monthlySavingsNeeded)}
-• **Time to goal**: ${emergencyPlan.monthsToGoal} months
+**Why you need this:**
+Emergency funds are for when life happens - job loss, car repair, medical bills, etc.
 
-Start with $1,000 as your first milestone, then build to the full 6-month target. Keep this in a high-yield savings account!`;
+**Your Emergency Fund Plan:**
+🎯 **Goal:** ${formatCurrency(emergencyPlan.targetAmount)} (covers 6 months of expenses)
+💰 **Save each month:** ${formatCurrency(emergencyPlan.monthlySavingsNeeded)}
+⏰ **Time to reach goal:** ${emergencyPlan.monthsToGoal} months
+
+**Super Simple Steps:**
+1. **Start with $500** - Covers most small emergencies
+2. **Use a separate savings account** - Keep it away from spending money
+3. **Automate it** - Set up automatic transfer each payday
+4. **High-yield savings** - Online banks like Ally or Marcus pay more interest
+
+**Pro tip:** Start small! Even $25/week adds up to $1,300 in a year.
+
+Ready to open a savings account, or have questions about where to keep this money?`;
       } else {
-        return "I'll help you plan your emergency fund! What's your monthly income and current savings amount?";
+        return `Smart thinking! An emergency fund is like an umbrella ☂️ - you hope you never need it, but you're glad it's there!
+
+To create your plan, tell me your monthly income (like "I make $3,500 per month").
+
+Here's why it matters: If you make $3,000/month, you'd want about $15,000 saved for emergencies. Sounds like a lot? Don't worry - we'll start small and build up! 💪`;
       }
     }
     
-    // Debt payoff calculation
+    // Debt payoff - Simplified
     if (message.includes('debt') || message.includes('loan') || message.includes('credit')) {
       const debtAmount = extractNumberFromText(userMessage);
       if (debtAmount) {
         const interestRate = 0.18; // Default credit card rate
-        const minimumPayment = debtAmount * 0.02; // 2% minimum
+        const minimumPayment = debtAmount * 0.02;
         const aggressivePayment = minimumPayment * 2;
         
         const minPayoff = calculateDebtPayoff(debtAmount, interestRate, minimumPayment);
         const aggressivePayoff = calculateDebtPayoff(debtAmount, interestRate, aggressivePayment);
         
-        return `Here's your debt payoff strategy for ${formatCurrency(debtAmount)}:
+        return `Let's crush that ${formatCurrency(debtAmount)} debt! 💪
 
-💳 **Debt Payoff Options:**
+**Two paths to freedom:**
 
-**Minimum Payment (${formatCurrency(minimumPayment)}/month):**
-• Time to payoff: ${minPayoff.monthsToPayoff} months
-• Total interest: ${formatCurrency(minPayoff.totalInterest)}
+🐌 **Minimum payments (${formatCurrency(minimumPayment)}/month):**
+• Takes ${Math.round(minPayoff.monthsToPayoff/12)} years
+• You'll pay ${formatCurrency(minPayoff.totalInterest)} in interest
 
-**Aggressive Payment (${formatCurrency(aggressivePayment)}/month):**
-• Time to payoff: ${aggressivePayoff.monthsToPayoff} months  
-• Total interest: ${formatCurrency(aggressivePayoff.totalInterest)}
-• **Savings**: ${formatCurrency(minPayoff.totalInterest - aggressivePayoff.totalInterest)}
+🚀 **Double payments (${formatCurrency(aggressivePayment)}/month):**
+• Takes ${Math.round(aggressivePayoff.monthsToPayoff/12)} years  
+• You'll pay ${formatCurrency(aggressivePayoff.totalInterest)} in interest
+• **You save ${formatCurrency(minPayoff.totalInterest - aggressivePayoff.totalInterest)}!**
 
-I recommend the debt avalanche method: pay minimums on all debts, then put extra money toward the highest interest rate debt first!`;
+**Simple debt strategy:**
+1. **Pay minimums on everything**
+2. **Put extra money on highest interest rate debt**
+3. **Once that's paid off, move to the next highest**
+
+**Quick wins:**
+• Call your credit card company and ask for a lower rate
+• Consider a balance transfer to 0% interest card
+• Use any tax refund or bonus toward debt
+
+Can you share what interest rate you're paying? That helps me give better advice!`;
       } else {
-        return "I'll help you create a debt payoff plan! What's your total debt amount and interest rate? For example: 'I have $5000 in credit card debt at 18% interest.'";
+        return `Tackling debt is one of the best things you can do for your future! 🎯
+
+To help you create a payoff plan, I need:
+• **How much you owe** (like "$5,000 in credit cards")
+• **What interest rate** (look at your statement - usually 15-25%)
+
+Don't have the exact numbers? No problem! Just tell me roughly:
+"I have about $3,000 in credit card debt"
+
+Then I'll show you exactly how to pay it off and how much money you'll save! 💰`;
       }
     }
     
-    // Investment advice
+    // Investment - Very beginner focused
     if (message.includes('invest') || message.includes('stock') || message.includes('portfolio')) {
       const age = chatContext.userData.age || 30;
-      const stockAllocation = 100 - age; // Rule of thumb
-      const bondAllocation = age;
+      const stockAllocation = Math.min(90, 100 - age); // Cap at 90% stocks
+      const bondAllocation = 100 - stockAllocation;
       
-      return `Based on your profile, here's your personalized investment strategy:
+      return `Investing sounds scary, but it's actually pretty simple! 📈
 
-📈 **Investment Allocation:**
-• **Stocks/Equity funds**: ${stockAllocation}% (growth focus)
-• **Bonds/Fixed income**: ${bondAllocation}% (stability)
+**Think of it like this:** Instead of your money sitting in a low-interest savings account, you're letting it grow by owning tiny pieces of successful companies.
 
-**Recommended Portfolio:**
-• 70% Low-cost index funds (VTI, VXUS)
-• 20% Bond index funds (BND)
-• 10% REITs or commodities
+**Your simple starter portfolio:**
+• **${stockAllocation}% Stocks** - Companies that grow over time
+• **${bondAllocation}% Bonds** - Safer, steady income
 
-**Investment priority order:**
-1. Max employer 401(k) match first
-2. Max Roth IRA ($6,500/year)
-3. Additional 401(k) contributions
-4. Taxable investment accounts
+**Beginner's Investment Plan:**
+1. **Start with $50-100/month** - Don't invest money you need soon!
+2. **Use index funds** - Like buying the whole stock market at once
+3. **Pick 2-3 funds maximum** - Don't overthink it
 
-Start with $100/month if you're new to investing. Dollar-cost averaging reduces risk!`;
+**Recommended funds for beginners:**
+• **VTI** - Owns every US company (stock fund)
+• **VXUS** - Owns international companies  
+• **BND** - Safe bonds for stability
+
+**Where to start:**
+• Fidelity, Vanguard, or Schwab (low fees)
+• Start with a Roth IRA (tax-free growth!)
+• Set up automatic investing
+
+**Important:** Only invest money you won't need for 5+ years. Emergency fund comes first!
+
+Want me to walk you through opening your first investment account?`;
+    }
+
+    // Catch-all for beginners
+    if (message.includes('start') || message.includes('begin') || message.includes('new') || message.includes('first')) {
+      return `Welcome to your money journey! 🌟 Let's start with the basics.
+
+**The "Baby Steps" approach:**
+1. **$500 mini emergency fund** (for small surprises)
+2. **Pay off high-interest debt** (credit cards first)
+3. **Build full emergency fund** (3-6 months expenses)
+4. **Start investing** (retirement accounts)
+5. **Save for goals** (house, vacation, etc.)
+
+**Where are you right now?**
+• "I have no savings" ➜ Let's start with step 1!
+• "I have some debt" ➜ Let's make a payoff plan!
+• "I want to invest" ➜ Let's check if you're ready!
+
+Just tell me where you are and what feels most important to you right now. We'll take it one step at a time! 🚶‍♀️`;
     }
     
-    // Default responses
-    if (message.includes('hello') || message.includes('hi') || message.includes('help')) {
-      return FINANCIAL_RESPONSES.greeting;
-    }
-    
-    return "I'd love to help with that! For personalized advice, share some details like your income, age, or specific financial goals. I can create custom calculations for budgets, retirement, debt payoff, and investment strategies.";
+    return `I'd love to help you with that! 😊 
+
+For the best advice, it helps if you share:
+• Your situation (like "I'm new to budgeting" or "I want to start investing")
+• Your monthly income (roughly is fine!)
+• Your age (helps with planning)
+
+Or just pick a topic:
+💰 "Help me budget" 
+🏦 "Plan for retirement"
+🚨 "Build emergency savings"
+📊 "Pay off debt"
+📈 "Start investing"
+
+Remember - everyone starts somewhere, and there are no dumb questions! 🌟`;
   };
 
   const handleSendMessage = async () => {
@@ -260,7 +385,7 @@ Start with $100/month if you're new to investing. Dollar-cost averaging reduces 
 
     // Simulate typing delay
     setTimeout(() => {
-      const botResponse = getPersonalizedResponse(userInput);
+      const botResponse = getBeginnerFriendlyResponse(userInput);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: botResponse,
@@ -371,29 +496,29 @@ Start with $100/month if you're new to investing. Dollar-cost averaging reduces 
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setInputValue("I make $5000 per month, help me create a budget")}
+              onClick={() => setInputValue("I'm new to budgeting and make $4000 per month")}
               className="text-xs"
             >
               <PiggyBank className="w-3 h-3 mr-1" />
-              Budget Calculator
+              Simple Budget
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setInputValue("I'm 30 years old and make $6000 per month, help me plan for retirement")}
+              onClick={() => setInputValue("I'm 25 and want to start saving for retirement")}
               className="text-xs"
             >
               <TrendingUp className="w-3 h-3 mr-1" />
-              Retirement Plan
+              Retirement Start
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setInputValue("I have $5000 in credit card debt, help me pay it off")}
+              onClick={() => setInputValue("Help me start building an emergency fund")}
               className="text-xs"
             >
               <Calculator className="w-3 h-3 mr-1" />
-              Debt Payoff
+              Emergency Fund
             </Button>
           </div>
         </div>
